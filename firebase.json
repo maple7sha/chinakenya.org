@@ -1,0 +1,9 @@
+{
+  "firebase": "srichinakenya",
+  "public": ".",
+  "ignore": [
+    "firebase.json",
+    "**/.*",
+    "**/node_modules/**"
+  ]
+}
