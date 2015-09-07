@@ -11,8 +11,8 @@ body {
     height: 100%;
 }
 
-body {
-    padding-top: 50px; /* Required padding for .navbar-fixed-top. Remove if using .navbar-static-top. Change if height of navigation changes. */
+.container {
+    padding-top: 20px;
 }
 
 .img-portfolio {
@@ -134,9 +134,17 @@ footer {
 
 .table {
     table-layout: fixed; 
-    width: 100%
+    width: 100%;
 }
 
 .table-cell {
     word-wrap: break-word;
+    padding-left: 5px;
+    border: dotted;
+    border-width: 1px;
+}
+
+#alert {
+    position: relative;
+    width: 100%;
 }

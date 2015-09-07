@@ -1,19 +1,47 @@
+var AlertSuccess = React.createClass({
+  render: function() {
+    return (
+      <div className="alert alert-success">
+              <a href="#" className="close" data-dismiss="alert" aria-label="close">&times;</a>
+              <strong>Success {this.props.msg}!</strong> 
+      </div>
+    );
+  }
+});
+
+var AlertFailure = React.createClass({
+  render: function() {
+    return (
+      <div className="alert alert-failure">
+              <a href="#" className="close" data-dismiss="alert" aria-label="close">&times;</a>
+              <strong>Failure!</strong> 
+      </div>
+    );
+  }
+});
+
 var NewsAddForm = React.createClass({
 
   handleSubmit: function() {
-    alert("test");
     var ref = new Firebase("https://srichinakenya.firebaseio.com/News");
-    var tivalue = $("#inputTitle").val();
-    var brvalue = $("#inputBrief").val()
-    var tevalue = $("#inputText").val()
     ref.push({
       title: $("#inputTitle").val(),
       brief:  $("#inputBrief").val(),
       text: $("#inputText").val()
-    }, function() {
-      alert("success");
-    });
+    }, function(error) {
+      if(error){
 
+      }
+      else{
+        $("#inputTitle").val('');
+        $("#inputBrief").val('');
+        $("#inputText").val('');
+        React.render(
+          <AlertSuccess msg={" in adding News"}/>,
+          document.getElementById('alert')
+        );
+      }
+    });
   },
 
   render: function() {
@@ -49,7 +77,7 @@ var NewsAddForm = React.createClass({
                     </div>
                     <div className="form-group">
                       <div className="col-sm-offset-2 col-sm-10">
-                        <button type="submit" onClick={this.handleSubmit.bind(this)} className="btn btn-primary">submit</button>
+                        <button type="button" onClick={this.handleSubmit.bind(this)} className="btn btn-primary">submit</button>
                       </div>
                     </div>
                   </form>
@@ -63,42 +91,52 @@ var NewsAddForm = React.createClass({
   }
 });
 
-
 var AdminNews = React.createClass({
   mixins: [ReactFireMixin],
 
-  getInitialState: function() {
-      return { showAdd: false };
+  componentWillMount: function() {
+    var ref = new Firebase("https://srichinakenya.firebaseio.com/News");
+    this.bindAsArray(ref, "items");
   },
 
-  onComplete: function(){
-    alert("Deleted!");
+  getInitialState: function() {
+    return { items: []};
   },
 
   handleClickDelete: function(key) {
     if (confirm("Are you sure?")){
+      var onComplete = function(error) {
+        if (error) {
+          console.log('Synchronization failed');
+        } else {
+          console.log('Synchronization succeeded');
+          React.render(
+            <AlertSuccess msg={" in deleting News"} />,
+            document.getElementById('alert')
+          );
+        }
+      };
+
       var ref = new Firebase("https://srichinakenya.firebaseio.com/News");
-      ref.child(key).remove(this.onComplete);
+      ref.child(key).remove(onComplete);
     }
   },
 
-  handleClickAdd: function() { 
-    this.setState({ showAdd: true });
-  },
 
   render: function() {
     var self=this;
-    var newsList = this.props.data.map(function(news, i) {
+    var newsList = self.state.items.map(function(news, i) {
       return (
             <tr>
-              <td className="table-cell"> {i} </td>
+              <td className="table-cell"> {i}  </td>
               <td className="table-cell"> {news["title"]} </td>
               <td className="table-cell"> {news["brief"]} </td>
               <td className="table-cell"> {news["text"]} </td>
-              <td className="table-cell"> <button onClick={self.handleClickDelete.bind(this, news[".key"])} type="button" className="btn btn-danger">DELETE</button> </td>
+              <td className="table-cell"> <button onClick={self.handleClickDelete.bind(self, news[".key"])}  className="btn btn-danger">DELETE</button> </td>
             </tr>
       );
     });
+    newsList.reverse();
     return (
             <div>
               <div>
@@ -106,7 +144,7 @@ var AdminNews = React.createClass({
               </div>
               <table className="table table-bordered table-striped "> 
                 <tr>
-                  <th className="col-md-1"> Order </th>
+                  <th className=""> Order </th>
                   <th className="col-md-1"> Title </th>
                   <th className="col-md-2"> Abstract</th>
                   <th className="col-md-6"> Text </th>
@@ -123,32 +161,27 @@ var AdminNews = React.createClass({
 var Manage = React.createClass({
   mixins: [ReactFireMixin],
 
-  componentWillMount: function() {
-      var newsRef = new Firebase("https://srichinakenya.firebaseio.com/News");
-      this.bindAsArray(newsRef, "newsData");
-      //this.state.data
-      // ref.once('value', function(snapshot) {
-      //   snapshot.forEach(function(childSnapshot){
-      //     alert(childSnapshot.key());
-      //   });
-      // });
-  },
+  // componentWillMount: function() {
+  //     var newsRef = new Firebase("https://srichinakenya.firebaseio.com/News");
+  //     this.bindAsArray(newsRef, "newsData");
+  //     //this.state.data
+  //     // ref.once('value', function(snapshot) {
+  //     //   snapshot.forEach(function(childSnapshot){
+  //     //     alert(childSnapshot.key());
+  //     //   });
+  //     // });
+  // },
 
-  componentWillUnmount: function() {
-     this.unbind("newsData");
-  },
+  // componentDidMount: function() {
+  // },
 
-  componentDidMount: function() {
-  },
-
-  getInitialState: function() {
-    return {newsData: []};
-  },
-
+  // getInitialState: function() {
+  //   return {newsData: []};
+  // },
 
   handleClickNews: function() {
     React.render(
-      <AdminNews data={this.state.newsData}  />,
+      <AdminNews />,
       document.getElementById('admin-content')
     );
   },
@@ -164,7 +197,6 @@ var Manage = React.createClass({
     self = this;
     return (
           <div>
-            
             <ul className="nav nav-tabs nav-justified">
               <li role="presentation"><a href="#" onClick={self.handleClickNews.bind(this)} data-toggle="tab">News</a></li>
               <li role="presentation"><a href="#" onClick={self.handleClickColumnist.bind(this)} data-toggle="tab">Columnists</a></li>
