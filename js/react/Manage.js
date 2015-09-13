@@ -1,9 +1,10 @@
+/* Alert functions at the top bar of admin page */
 var AlertSuccess = React.createClass({
   render: function() {
     return (
       <div className="alert alert-success">
-              <a href="#" className="close" data-dismiss="alert" aria-label="close">&times;</a>
-              <strong>Success {this.props.msg}!</strong> 
+        <a href="#" className="close" data-dismiss="alert" aria-label="close">&times;</a>
+        <strong>Success {this.props.msg}!</strong> 
       </div>
     );
   }
@@ -20,17 +21,21 @@ var AlertFailure = React.createClass({
   }
 });
 
+/* Form component to add news */
 var NewsAddForm = React.createClass({
 
   handleSubmit: function() {
     var ref = new Firebase("https://srichinakenya.firebaseio.com/News");
     ref.push({
       title: $("#inputTitle").val(),
-      brief:  $("#inputBrief").val(),
+      brief: $("#inputBrief").val(),
       text: $("#inputText").val()
     }, function(error) {
       if(error){
-
+        React.render(
+          <AlertFailure msg={" in updating News"}/>,
+          document.getElementById('alert')
+        );
       }
       else{
         $("#inputTitle").val('');
@@ -91,12 +96,86 @@ var NewsAddForm = React.createClass({
   }
 });
 
+/* Form component to UPDATE news */
+var NewsUpdateForm = React.createClass({
+
+  handleSubmit: function() {
+    var ref = new Firebase("https://srichinakenya.firebaseio.com/News");
+    ref.push({
+      title: $("#inputTitle").val(),
+      brief: $("#inputBrief").val(),
+      text: $("#inputText").val()
+    }, function(error) {
+      if(error){
+        React.render(
+          <AlertFailure msg={" in updating News"}/>,
+          document.getElementById('alert')
+        );
+      }
+      else{
+        $("#inputTitle").val('');
+        $("#inputBrief").val('');
+        $("#inputText").val('');
+        React.render(
+          <AlertSuccess msg={" in updating News"}/>,
+          document.getElementById('alert')
+        );
+      }
+    });
+  },
+
+  render: function() {
+    return (
+        <div className="panel-group" id="accordion2">
+          <div className="panel panel-default">
+            <div id="collapse2" className="panel-collapse collapse">
+              <div className="panel-body">
+                <div>
+                  <br />
+
+                  <form className="form-horizontal">
+                    <div className="form-group">
+                      <label for="inputTitle" className="col-sm-2 control-label">Title</label>
+                      <div className="col-sm-8">
+                        <input className="form-control" id="inputTitle" placeholder="Concise Title for News"> {this.props.news["inputTitle"]} </input>
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label for="inputBrief" className="col-sm-2 control-label">Abstract</label>
+                      <div className="col-sm-8">
+                        <textarea className="form-control" id="inputBrief" rows="2" placeholder="Brief introduction on the news"> {this.props.news["inputBrief"]}</textarea>
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label for="inputText" className="col-sm-2 control-label">Text</label>
+                      <div className="col-sm-8">
+                        <textarea className="form-control" id="inputText" rows="8" placeholder="Full text for the news">{this.props.news["inputText"]}</textarea>
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <div className="col-sm-offset-2 col-sm-10">
+                        <button type="button" onClick={this.handleSubmit.bind(this)} className="btn btn-primary">submit</button>
+                      </div>
+                    </div>
+                  </form>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+  }
+});
+
+/* Main Admin portal to control news */
 var AdminNews = React.createClass({
   mixins: [ReactFireMixin],
 
   componentWillMount: function() {
     var ref = new Firebase("https://srichinakenya.firebaseio.com/News");
     this.bindAsArray(ref, "items");
+
   },
 
   getInitialState: function() {
@@ -122,17 +201,44 @@ var AdminNews = React.createClass({
     }
   },
 
+  handleClickUpdate: function(news) {
+    if (confirm("Are you sure?")){
+      var onComplete = function(error) {
+        if (error) {
+          console.log('Synchronization failed');
+        } else {
+          console.log('Synchronization succeeded');
+          React.render(
+            <AlertSuccess msg={" in updating News"} />,
+            document.getElementById('alert')
+          );
+        }
+      };
+
+      var ref = new Firebase("https://srichinakenya.firebaseio.com/News");
+      ref.child(news[".key"]).update({
+        title: $("#editTitle").val(),
+        brief: $("#editBrief").val(),
+        text: $("#editText").val()
+      }, onComplete);
+
+    }
+  },
 
   render: function() {
     var self=this;
     var newsList = self.state.items.map(function(news, i) {
       return (
             <tr>
-              <td className="table-cell"> {i}  </td>
-              <td className="table-cell"> {news["title"]} </td>
-              <td className="table-cell"> {news["brief"]} </td>
-              <td className="table-cell"> {news["text"]} </td>
-              <td className="table-cell"> <button onClick={self.handleClickDelete.bind(self, news[".key"])}  className="btn btn-danger">DELETE</button> </td>
+              <td className="table-cell"> <textarea id="editTitle" className="edit" defaultValue={news["title"]} /> </td>          
+              <td className="table-cell"> <textarea id="editBrief" className="edit" defaultValue={news["brief"]} /> </td>
+              <td className="table-cell"> <textarea id="editText" className="edit" defaultValue={news["text"]} /> </td>
+              <td className="table-button table-control"> 
+                <button type="button" onClick={self.handleClickUpdate.bind(self, news)} className="btn btn-warning" >UPDATE</button>
+              </td>
+              <td className="table-button table-control"> 
+                <button onClick={self.handleClickDelete.bind(self, news[".key"])}  className="btn btn-danger">DELETE</button> 
+              </td>
             </tr>
       );
     });
@@ -141,14 +247,13 @@ var AdminNews = React.createClass({
             <div>
               <div>
                 <NewsAddForm />
+                <div id="updateForm"></div>
               </div>
-              <table className="table table-bordered table-striped "> 
+              <table className="table table-striped "> 
                 <tr>
-                  <th className=""> Order </th>
-                  <th className="col-md-1"> Title </th>
+                  <th className="col-md-2"> Title </th>
                   <th className="col-md-2"> Abstract</th>
-                  <th className="col-md-6"> Text </th>
-                  <th className="col-md-2"> Operations </th>
+                  <th className="col-md-5"> Text </th>
                 </tr>
                 {newsList}
               </table>
@@ -160,24 +265,6 @@ var AdminNews = React.createClass({
 // React className for News
 var Manage = React.createClass({
   mixins: [ReactFireMixin],
-
-  // componentWillMount: function() {
-  //     var newsRef = new Firebase("https://srichinakenya.firebaseio.com/News");
-  //     this.bindAsArray(newsRef, "newsData");
-  //     //this.state.data
-  //     // ref.once('value', function(snapshot) {
-  //     //   snapshot.forEach(function(childSnapshot){
-  //     //     alert(childSnapshot.key());
-  //     //   });
-  //     // });
-  // },
-
-  // componentDidMount: function() {
-  // },
-
-  // getInitialState: function() {
-  //   return {newsData: []};
-  // },
 
   handleClickNews: function() {
     React.render(

@@ -31,13 +31,15 @@ var Download = React.createClass({
 
   render: function() {
     var self = this;
+
     var downloadNodes = this.state.data.map(function(download) {
+
       return (
         <div>
           <a href={download} download>
             <br />
             <span className="glyphicon glyphicon-download-alt"> </span>
-                Document
+              &nbsp; {download.split("/")[1]}         
           </a>
           <br/>
         </div>
