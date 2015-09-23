@@ -207,6 +207,7 @@ var AdminNews = React.createClass({
         if (error) {
           console.log('Synchronization failed');
         } else {
+          $("#editTitle").val(news["title"]);
           console.log('Synchronization succeeded');
           React.render(
             <AlertSuccess msg={" in updating News"} />,
@@ -216,23 +217,26 @@ var AdminNews = React.createClass({
       };
 
       var ref = new Firebase("https://srichinakenya.firebaseio.com/News");
+      
       ref.child(news[".key"]).update({
-        title: $("#editTitle").val(),
-        brief: $("#editBrief").val(),
-        text: $("#editText").val()
+        title: $("#editTitle"+news[".key"]).val(),
+        brief: $("#editBrief"+news[".key"]).val(),
+        text: $("#editText"+news[".key"]).val()
       }, onComplete);
-
     }
   },
 
   render: function() {
     var self=this;
     var newsList = self.state.items.map(function(news, i) {
+      var editTitle = "editTitle" + news[".key"];
+      var editBrief = "editBrief" + news[".key"];
+      var editText = "editText" + news[".key"];
       return (
             <tr>
-              <td className="table-cell"> <textarea id="editTitle" className="edit" defaultValue={news["title"]} /> </td>          
-              <td className="table-cell"> <textarea id="editBrief" className="edit" defaultValue={news["brief"]} /> </td>
-              <td className="table-cell"> <textarea id="editText" className="edit" defaultValue={news["text"]} /> </td>
+              <td className="table-cell"> <textarea id={editTitle} className="edit" defaultValue={news["title"]} /> </td>
+              <td className="table-cell"> <textarea id={editBrief} className="edit" defaultValue={news["brief"]} /> </td>
+              <td className="table-cell"> <textarea id={editText} className="edit" defaultValue={news["text"]} /> </td>
               <td className="table-button table-control"> 
                 <button type="button" onClick={self.handleClickUpdate.bind(self, news)} className="btn btn-warning" >UPDATE</button>
               </td>
@@ -242,7 +246,7 @@ var AdminNews = React.createClass({
             </tr>
       );
     });
-    newsList.reverse();
+    //newsList.reverse();
     return (
             <div>
               <div>
@@ -252,7 +256,7 @@ var AdminNews = React.createClass({
               <table className="table table-striped "> 
                 <tr>
                   <th className="col-md-2"> Title </th>
-                  <th className="col-md-2"> Abstract</th>
+                  <th className="col-md-2"> Abstract </th>
                   <th className="col-md-5"> Text </th>
                 </tr>
                 {newsList}
